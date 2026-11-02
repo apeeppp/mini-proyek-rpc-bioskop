@@ -20,6 +20,11 @@ export default function App() {
   });
 
   const wsRef = useRef(null);
+  const selectedSeatRef = useRef(selectedSeat);
+
+  useEffect(() => {
+    selectedSeatRef.current = selectedSeat;
+  }, [selectedSeat]);
 
   // Simpan booking lokal pengguna
   useEffect(() => {
@@ -46,6 +51,7 @@ export default function App() {
   // WebSocket connection untuk status realtime
   useEffect(() => {
     let reconnectTimeout;
+    let isMounted = true;
 
     const connectWs = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -54,41 +60,37 @@ export default function App() {
       wsRef.current = ws;
 
       ws.onopen = () => {
+        if (!isMounted) return;
         setIsWsConnected(true);
       };
 
       ws.onmessage = (event) => {
+        if (!isMounted) return;
         try {
           const data = JSON.parse(event.data);
           
-          if (data.event === 'SNAPSHOT') {
+          if (data.event === 'SNAPSHOT' || data.event === 'BOOKED' || data.event === 'CANCELLED') {
             setSeats((prev) => {
-              const map = new Map(prev.map((s) => [s.seat_no, s]));
-              map.set(data.seat_no, {
+              const idx = prev.findIndex((s) => s.seat_no === data.seat_no);
+              const updatedItem = {
                 seat_no: data.seat_no,
                 status: data.status,
                 customer_name: data.customer_name || '',
                 booking_id: data.booking_id || ''
-              });
-              return Array.from(map.values()).sort((a, b) => a.seat_no.localeCompare(b.seat_no));
-            });
-          } else if (data.event === 'BOOKED' || data.event === 'CANCELLED') {
-            // Update seat realtime
-            setSeats((prev) =>
-              prev.map((s) =>
-                s.seat_no === data.seat_no
-                  ? {
-                      ...s,
-                      status: data.status,
-                      customer_name: data.customer_name || '',
-                      booking_id: data.booking_id || ''
-                    }
-                  : s
-              )
-            );
+              };
 
+              if (idx >= 0) {
+                const nextSeats = [...prev];
+                nextSeats[idx] = updatedItem;
+                return nextSeats;
+              }
+              return [...prev, updatedItem].sort((a, b) => a.seat_no.localeCompare(b.seat_no));
+            });
+          }
+
+          if (data.event === 'BOOKED' || data.event === 'CANCELLED') {
             // Jika kursi yang sedang dipilih dibooking orang lain
-            if (data.event === 'BOOKED' && selectedSeat === data.seat_no) {
+            if (data.event === 'BOOKED' && selectedSeatRef.current === data.seat_no) {
               setSelectedSeat(null);
               setStatusMsg({ type: 'error', text: `Kursi ${data.seat_no} baru saja dipesan oleh orang lain.` });
             }
@@ -113,7 +115,9 @@ export default function App() {
       };
 
       ws.onclose = () => {
+        if (!isMounted) return;
         setIsWsConnected(false);
+        fetchSeats();
         reconnectTimeout = setTimeout(connectWs, 3000);
       };
 
@@ -125,10 +129,11 @@ export default function App() {
     connectWs();
 
     return () => {
+      isMounted = false;
       clearTimeout(reconnectTimeout);
       if (wsRef.current) wsRef.current.close();
     };
-  }, [selectedSeat]);
+  }, []);
 
   // Handle pemesanan
   const handleBooking = async (e) => {
