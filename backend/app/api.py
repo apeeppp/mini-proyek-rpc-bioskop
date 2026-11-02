@@ -5,14 +5,14 @@ import uuid
 from typing import Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import grpc
 
 from .generated import cinema_pb2 as pb, cinema_pb2_grpc as rpc
 from .config import settings
-from .server import serve as start_grpc_server
+from .server import serve as start_grpc_server, get_service
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("cinema_api")
@@ -141,7 +141,7 @@ def get_booking(booking_id: str):
         handle_grpc_error(e)
 
 @app.post("/api/bookings/{booking_id}/cancel")
-def cancel_booking(booking_id: str, payload: Optional[CancelRequestModel] = None):
+def cancel_booking(booking_id: str, payload: Optional[CancelRequestModel] = Body(default=None)):
     stub = get_grpc_stub()
     req_id = (payload.request_id if payload and payload.request_id else str(uuid.uuid4()))
     try:
@@ -165,44 +165,45 @@ def cancel_booking(booking_id: str, payload: Optional[CancelRequestModel] = None
 @app.websocket("/ws/shows/{show_id}")
 async def websocket_seat_stream(websocket: WebSocket, show_id: str):
     await websocket.accept()
-    loop = asyncio.get_running_loop()
-    target = f"localhost:{settings.grpc_port}"
-    ch = grpc.insecure_channel(target)
-    stub = rpc.CinemaServiceStub(ch)
+    service = get_service()
     
-    stop_event = threading.Event()
-    msg_queue = asyncio.Queue()
+    # Ambil snapshot awal langsung dari repository
+    try:
+        initial_seats = service.repo.list_seats(show_id)
+        for s in initial_seats:
+            await websocket.send_json({
+                "show_id": show_id,
+                "seat_no": s["seat_no"],
+                "status": s["status"],
+                "customer_name": s["customer_name"],
+                "booking_id": s["booking_id"],
+                "event": "SNAPSHOT"
+            })
+    except Exception as err:
+        logger.warning("Gagal mengirim snapshot kursi: %s", err)
 
-    def grpc_subscriber():
-        try:
-            stream = stub.StreamStatusKursi(pb.ShowRequest(show_id=show_id))
-            for item in stream:
-                if stop_event.is_set():
-                    break
-                event_data = {
-                    "show_id": item.show_id,
-                    "seat_no": item.seat_no,
-                    "status": item.status,
-                    "customer_name": item.customer_name,
-                    "booking_id": item.booking_id,
-                    "event": item.event
-                }
-                asyncio.run_coroutine_threadsafe(msg_queue.put(event_data), loop)
-        except Exception as err:
-            logger.warning("StreamStatusKursi subscriber ended: %s", err)
-
-    worker_thread = threading.Thread(target=grpc_subscriber, daemon=True)
-    worker_thread.start()
-
+    # Berlangganan langsung ke stream_manager tanpa memakan thread pool gRPC
+    sub_queue = service.streams.subscribe(show_id)
     try:
         while True:
-            data = await msg_queue.get()
-            await websocket.send_json(data)
+            # Polling queue secara non-blocking di async loop
+            try:
+                event = sub_queue.get_nowait()
+                data = {
+                    "show_id": event.show_id,
+                    "seat_no": event.seat_no,
+                    "status": event.status,
+                    "customer_name": event.customer_name,
+                    "booking_id": event.booking_id,
+                    "event": event.event
+                }
+                await websocket.send_json(data)
+            except Exception:
+                await asyncio.sleep(0.15)
     except (WebSocketDisconnect, asyncio.CancelledError):
-        logger.info("WebSocket client disconnected for show_id %s", show_id)
+        logger.info("WebSocket disconnected for show_id %s", show_id)
     finally:
-        stop_event.set()
-        ch.close()
+        service.streams.unsubscribe(show_id, sub_queue)
 
 def main():
     import uvicorn

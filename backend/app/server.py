@@ -6,8 +6,13 @@ from .config import settings
 from .repository import Repository, RepositoryError
 from .stream_manager import StreamManager
 logging.basicConfig(level=logging.INFO)
+
+shared_service = None
+
 class CinemaService(rpc.CinemaServiceServicer):
-    def __init__(self): self.repo=Repository(); self.streams=StreamManager()
+    def __init__(self, repo=None, streams=None):
+        self.repo = repo or Repository()
+        self.streams = streams or StreamManager()
     def fail(self, context, error):
         codes={'INVALID_ARGUMENT':grpc.StatusCode.INVALID_ARGUMENT,'NOT_FOUND':grpc.StatusCode.NOT_FOUND,'ALREADY_EXISTS':grpc.StatusCode.ALREADY_EXISTS,'FAILED_PRECONDITION':grpc.StatusCode.FAILED_PRECONDITION}
         context.abort(codes.get(error.code,grpc.StatusCode.INTERNAL),error.message)
@@ -41,8 +46,17 @@ class CinemaService(rpc.CinemaServiceServicer):
                 try: yield q.get(timeout=.5)
                 except Exception: continue
         finally: self.streams.unsubscribe(request.show_id,q)
-def serve():
-    server=grpc.server(futures.ThreadPoolExecutor(max_workers=32)); rpc.add_CinemaServiceServicer_to_server(CinemaService(),server)
+
+def get_service():
+    global shared_service
+    if shared_service is None:
+        shared_service = CinemaService()
+    return shared_service
+
+def serve(service_instance=None):
+    global shared_service
+    service = service_instance or get_service()
+    server=grpc.server(futures.ThreadPoolExecutor(max_workers=64)); rpc.add_CinemaServiceServicer_to_server(service,server)
     server.add_insecure_port('%s:%s' % (settings.grpc_host,settings.grpc_port)); server.start(); logging.info('gRPC listening on %s',settings.grpc_port); server.wait_for_termination()
 if __name__=='__main__': serve()
 

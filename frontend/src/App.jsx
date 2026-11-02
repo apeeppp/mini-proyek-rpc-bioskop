@@ -37,7 +37,9 @@ export default function App() {
       const res = await fetch(`/api/shows/${SHOW_ID}/seats`);
       if (res.ok) {
         const data = await res.json();
-        setSeats(data.seats || []);
+        if (Array.isArray(data.seats) && data.seats.length > 0) {
+          setSeats(data.seats);
+        }
       }
     } catch (err) {
       console.error('Gagal mengambil daftar kursi:', err);
