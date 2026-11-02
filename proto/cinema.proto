@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cinemarpc;
+service CinemaService {
+  rpc DaftarKursi(ShowRequest) returns (SeatList);
+  rpc PesanKursi(BookSeatRequest) returns (BookingResponse);
+  rpc StreamStatusKursi(ShowRequest) returns (stream SeatStatus);
+  rpc GetPemesanan(BookingLookupRequest) returns (BookingResponse);
+  rpc BatalkanPemesanan(CancelBookingRequest) returns (BookingResponse);
+}
+message ShowRequest { string show_id = 1; }
+message Seat { string seat_no = 1; string status = 2; string customer_name = 3; string booking_id = 4; }
+message SeatList { string show_id = 1; repeated Seat seats = 2; }
+message BookSeatRequest { string request_id = 1; string show_id = 2; string seat_no = 3; string customer_name = 4; }
+message BookingLookupRequest { string booking_id = 1; }
+message CancelBookingRequest { string request_id = 1; string booking_id = 2; }
+message BookingResponse { bool success = 1; string message = 2; string booking_id = 3; string request_id = 4; string show_id = 5; string seat_no = 6; string customer_name = 7; string status = 8; }
+message SeatStatus { string show_id = 1; string seat_no = 2; string status = 3; string customer_name = 4; string booking_id = 5; string event = 6; }

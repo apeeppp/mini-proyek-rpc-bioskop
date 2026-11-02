@@ -1,0 +1,4 @@
+concurrency,requests,success,errors,total_seconds,avg_latency_ms,p95_latency_ms,throughput_rps
+1,100,100,0,0.9945,9.89,11.247,100.549
+5,100,100,0,0.3213,15.846,20.2,311.212
+20,100,100,0,0.3879,72.959,96.532,257.789
