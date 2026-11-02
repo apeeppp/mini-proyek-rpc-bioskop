@@ -15,25 +15,29 @@ services:
       retries: 10
     networks: [cinema]
   server:
-    build: .
-    command: ["python", "-m", "app.server"]
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.api"]
     environment:
       DATABASE_URL: postgresql://cinema:${POSTGRES_PASSWORD:-cinema_dev_only}@db:5432/cinema
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: 50051
-    ports: ["50051:50051"]
+    ports:
+      - "50051:50051"
+      - "8000:8000"
     depends_on:
       db: {condition: service_healthy}
     networks: [cinema]
   client:
-    build: .
+    build:
+      context: ./backend
     entrypoint: ["python", "-m", "app.client"]
     environment:
       RPC_TARGET: server:50051
       RPC_TIMEOUT: ${RPC_TIMEOUT:-3}
     depends_on: [server]
     volumes:
-      - ./results:/workspace/results
+      - ./backend/results:/workspace/results
     networks: [cinema]
 networks:
   cinema:
