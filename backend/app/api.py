@@ -2,7 +2,7 @@ import asyncio
 import logging
 import threading
 import uuid
-from typing import Optional
+from typing import Optional, List
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Body
@@ -52,7 +52,8 @@ app.add_middleware(
 
 class BookRequestModel(BaseModel):
     show_id: str = "SHOW-001"
-    seat_no: str
+    seat_no: Optional[str] = None
+    seat_nos: Optional[List[str]] = None
     customer_name: str
     request_id: Optional[str] = None
 
@@ -108,29 +109,60 @@ def list_bookings(show_id: str = "SHOW-001"):
 @app.post("/api/bookings")
 def book_seat(payload: BookRequestModel):
     stub = get_grpc_stub()
-    req_id = payload.request_id or str(uuid.uuid4())
-    try:
-        res = stub.PesanKursi(
-            pb.BookSeatRequest(
-                request_id=req_id,
-                show_id=payload.show_id,
-                seat_no=payload.seat_no,
-                customer_name=payload.customer_name
-            ),
-            timeout=settings.rpc_timeout
-        )
-        return {
-            "success": res.success,
-            "message": res.message,
-            "booking_id": res.booking_id,
-            "request_id": res.request_id,
-            "show_id": res.show_id,
-            "seat_no": res.seat_no,
-            "customer_name": res.customer_name,
-            "status": res.status
-        }
-    except grpc.RpcError as e:
-        handle_grpc_error(e)
+    
+    # Ambil daftar kursi yang ingin dipesan
+    requested_seats = []
+    if payload.seat_nos and len(payload.seat_nos) > 0:
+        requested_seats = [s.strip() for s in payload.seat_nos if s.strip()]
+    elif payload.seat_no:
+        requested_seats = [payload.seat_no.strip()]
+    
+    if not requested_seats:
+        raise HTTPException(status_code=400, detail="Minimal satu kursi harus dipilih")
+    
+    # Lakukan pemesanan untuk setiap kursi
+    success_bookings = []
+    for s_no in requested_seats:
+        seat_req_id = f"{payload.request_id}_{s_no}" if payload.request_id else str(uuid.uuid4())
+        try:
+            res = stub.PesanKursi(
+                pb.BookSeatRequest(
+                    request_id=seat_req_id,
+                    show_id=payload.show_id,
+                    seat_no=s_no,
+                    customer_name=payload.customer_name
+                ),
+                timeout=settings.rpc_timeout
+            )
+            success_bookings.append({
+                "success": res.success,
+                "message": res.message,
+                "booking_id": res.booking_id,
+                "request_id": res.request_id,
+                "show_id": res.show_id,
+                "seat_no": res.seat_no,
+                "customer_name": res.customer_name,
+                "status": res.status
+            })
+        except grpc.RpcError as e:
+            # Jika ada salah satu kursi yang gagal, laporkan error spesifik
+            handle_grpc_error(e)
+            
+    # Kembalikan response single object (jika 1 kursi) atau batch object (jika banyak)
+    if len(success_bookings) == 1:
+        single = success_bookings[0]
+        single["bookings"] = success_bookings
+        return single
+    
+    return {
+        "success": True,
+        "message": f"Berhasil memesan {len(success_bookings)} kursi",
+        "show_id": payload.show_id,
+        "customer_name": payload.customer_name,
+        "seat_nos": [b["seat_no"] for b in success_bookings],
+        "bookings": success_bookings
+    }
+
 
 @app.get("/api/bookings/{booking_id}")
 def get_booking(booking_id: str):

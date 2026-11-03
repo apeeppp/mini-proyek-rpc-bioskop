@@ -1068,40 +1068,96 @@ body {
   margin-top: 14px;
 }
 
-/* Ergonomic Cinema Seat Map */
-.bk-seat-map {
+/* 32-Seat Cinema Theater Layout (16 Kiri - Lorong Tengah - 16 Kanan) */
+.bk-theater-layout {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 44px;
+  align-items: center;
   width: 100%;
-  max-width: 540px;
+  max-width: 660px;
+  margin-bottom: 40px;
 }
 
-.bk-row {
+.bk-layout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 34px 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.bk-block-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #60a5fa;
+  text-transform: uppercase;
+}
+
+.bk-aisle-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--color-ash);
+  text-transform: uppercase;
+}
+
+.bk-seat-map-32 {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.bk-row-split {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
 }
 
 .bk-row-label {
   font-weight: 800;
   font-size: 0.95rem;
   color: var(--color-silver);
-  width: 20px;
+  width: 22px;
   text-align: center;
+  user-select: none;
 }
 
-.bk-row-seats {
+.bk-seat-cluster {
   display: flex;
-  gap: 14px;
+  gap: 10px;
 }
 
-/* Cinema Seat Component */
+/* Lorong Tengah (Center Aisle) */
+.bk-center-aisle {
+  width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bk-aisle-line {
+  width: 2px;
+  height: 38px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.12) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+/* Cinema Seat Component (Dioptimalkan untuk 8 kolom) */
 .bk-seat-btn {
-  width: 48px;
-  height: 52px;
+  width: 44px;
+  height: 48px;
   background: transparent;
   border: none;
   padding: 0;
@@ -1114,24 +1170,84 @@ body {
 }
 
 .bk-seat-head {
-  width: 36px;
-  height: 14px;
-  border-radius: 6px 6px 2px 2px;
+  width: 32px;
+  height: 12px;
+  border-radius: 5px 5px 2px 2px;
   margin-bottom: 2px;
   transition: background-color 0.18s, border-color 0.18s;
 }
 
 .bk-seat-base {
-  width: 44px;
-  height: 32px;
-  border-radius: 3px 3px 6px 6px;
+  width: 40px;
+  height: 30px;
+  border-radius: 3px 3px 5px 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   transition: background-color 0.18s, border-color 0.18s;
+}
+
+/* Multi-Seat Selection Chips in Form */
+.bk-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bk-multi-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #000;
+  background: #facc15;
+  padding: 1px 7px;
+  border-radius: 3px;
+}
+
+.bk-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.bk-seat-tag-interactive {
+  background: rgba(250, 204, 21, 0.18);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  color: #facc15;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bk-seat-tag-interactive:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+}
+
+.bk-batch-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  color: var(--color-silver);
+}
+
+.bk-batch-summary strong {
+  color: #facc15;
 }
 
 /* Seat States (OPSI B) */

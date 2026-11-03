@@ -14,23 +14,25 @@ import {
   Trash2,
   RefreshCw,
   Search,
-  SlidersHorizontal
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { FEATURED_MOVIE } from '../data/movies';
 
 const SHOW_ID = 'SHOW-001';
+const ROWS = ['A', 'B', 'C', 'D'];
 
 export default function SeatBooking({ onBackToHome, isWsConnected }) {
   // Mode Tab: 'booking' (Penonton) | 'admin' (Admin & Transparansi Log)
   const [activeTab, setActiveTab] = useState('booking');
 
   const [seats, setSeats] = useState([]);
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]); // Array multi-kursi
   const [customerName, setCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
   const [activities, setActivities] = useState([]);
-  
+
   // Database Bookings List (untuk Admin & Transparansi)
   const [allBookings, setAllBookings] = useState([]);
   const [adminSearch, setAdminSearch] = useState('');
@@ -45,11 +47,11 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
   });
 
   const wsRef = useRef(null);
-  const selectedSeatRef = useRef(selectedSeat);
+  const selectedSeatsRef = useRef(selectedSeats);
 
   useEffect(() => {
-    selectedSeatRef.current = selectedSeat;
-  }, [selectedSeat]);
+    selectedSeatsRef.current = selectedSeats;
+  }, [selectedSeats]);
 
   // Simpan booking lokal pengguna
   useEffect(() => {
@@ -131,12 +133,12 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
             // Perbarui juga data tabel admin secara otomatis
             fetchAllBookings();
 
-            // Jika kursi yang sedang dipilih dibooking orang lain
-            if (data.event === 'BOOKED' && selectedSeatRef.current === data.seat_no) {
-              setSelectedSeat(null);
+            // Jika kursi yang sedang dipilih dibooking orang lain, hilangkan dari selectedSeats
+            if (data.event === 'BOOKED' && selectedSeatsRef.current.includes(data.seat_no)) {
+              setSelectedSeats((prev) => prev.filter((s) => s !== data.seat_no));
               setStatusMsg({
                 type: 'error',
-                text: `Kursi ${data.seat_no} baru saja dipesan oleh pengunjung lain.`
+                text: `Kursi ${data.seat_no} baru saja dipesan oleh pengunjung lain dan dihapus dari pilihan Anda.`
               });
             }
 
@@ -180,10 +182,21 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
     };
   }, []);
 
-  // Handle pemesanan
+  // Toggle seleksi kursi (mendukung lebih dari 1 kursi)
+  const toggleSeatSelection = (seatNo) => {
+    setSelectedSeats((prev) => {
+      if (prev.includes(seatNo)) {
+        return prev.filter((s) => s !== seatNo);
+      } else {
+        return [...prev, seatNo].sort((a, b) => a.localeCompare(b));
+      }
+    });
+  };
+
+  // Handle pemesanan (Single atau Multi-kursi)
   const handleBooking = async (e) => {
     e.preventDefault();
-    if (!selectedSeat || !customerName.trim()) return;
+    if (selectedSeats.length === 0 || !customerName.trim()) return;
 
     setLoading(true);
     setStatusMsg(null);
@@ -194,7 +207,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           show_id: SHOW_ID,
-          seat_no: selectedSeat,
+          seat_nos: selectedSeats,
           customer_name: customerName.trim()
         })
       });
@@ -205,17 +218,22 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
         throw new Error(data.detail || 'Pemesanan gagal');
       }
 
-      setStatusMsg({ type: 'success', text: `Tiket kursi ${selectedSeat} berhasil dipesan!` });
-      setUserBookings((prev) => [
-        {
-          booking_id: data.booking_id,
-          seat_no: data.seat_no,
-          customer_name: data.customer_name,
-          time: new Date().toLocaleTimeString()
-        },
-        ...prev
-      ]);
-      setSelectedSeat(null);
+      // Ambil daftar booking yang berhasil dibuat
+      const newBookings = data.bookings || [data];
+      const createdTickets = newBookings.map((b) => ({
+        booking_id: b.booking_id,
+        seat_no: b.seat_no,
+        customer_name: b.customer_name,
+        time: new Date().toLocaleTimeString()
+      }));
+
+      setStatusMsg({
+        type: 'success',
+        text: `Berhasil memesan ${createdTickets.length} tiket kursi: ${createdTickets.map((t) => t.seat_no).join(', ')}!`
+      });
+
+      setUserBookings((prev) => [...createdTickets, ...prev]);
+      setSelectedSeats([]);
       setCustomerName('');
       fetchAllBookings();
     } catch (err) {
@@ -225,10 +243,10 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
     }
   };
 
-  // Handle pembatalan (bisa dipanggil dari sesi tiket user maupun admin)
+  // Handle pembatalan (user atau admin)
   const handleCancelBooking = async (bookingId, seatNo, isAdmin = false) => {
     const confirmationMsg = isAdmin
-      ? `[ADMIN ACTION] Apakah Anda yakin ingin membatalkan/menghapus booking kursi ${seatNo}? Kursi akan kembali berstatus AVAILABLE.`
+      ? `[ADMIN ACTION] Batalkan reservasi kursi ${seatNo}? Status akan kembali menjadi AVAILABLE.`
       : `Batalkan pemesanan kursi ${seatNo}?`;
 
     if (!confirm(confirmationMsg)) return;
@@ -255,9 +273,6 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
     }
   };
 
-  const rowA = seats.filter((s) => s.seat_no.startsWith('A'));
-  const rowB = seats.filter((s) => s.seat_no.startsWith('B'));
-
   // Filter daftar booking untuk tabel admin
   const filteredBookings = allBookings.filter((b) => {
     if (!adminSearch) return true;
@@ -270,6 +285,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
     );
   });
 
+  const totalSeatsCount = seats.length || 32;
   const confirmedCount = allBookings.filter((b) => b.status === 'CONFIRMED').length;
   const cancelledCount = allBookings.filter((b) => b.status === 'CANCELLED').length;
 
@@ -343,7 +359,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
               </span>
               <span className="bk-meta-dot">•</span>
               <span className="bk-meta-item" style={{ color: '#22c55e' }}>
-                <span>Kursi Terisi: {confirmedCount} / 12</span>
+                <span>Kursi Terisi: {confirmedCount} / {totalSeatsCount}</span>
               </span>
             </div>
           </div>
@@ -353,7 +369,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
       {/* VIEW 1: MODE PEMESANAN KURSI (User View) */}
       {activeTab === 'booking' && (
         <div className="bk-main-grid">
-          {/* Cinema Theater Room */}
+          {/* Cinema Theater Room (Screen & Seats: 16 Kiri - Lorong - 16 Kanan) */}
           <section className="bk-theater-section">
             <div className="bk-screen-container">
               <div className="bk-projector-light"></div>
@@ -361,72 +377,105 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
               <div className="bk-screen-caption">LAYAR BIOSKOP / SCREEN</div>
             </div>
 
-            {/* Denah Kursi Opsi B */}
-            <div className="bk-seat-map">
-              {/* Baris A */}
-              <div className="bk-row">
-                <span className="bk-row-label">A</span>
-                <div className="bk-row-seats">
-                  {rowA.map((seat) => {
-                    const isBooked = seat.status === 'BOOKED';
-                    const isSelected = selectedSeat === seat.seat_no;
-
-                    let seatClass = 'available';
-                    if (isBooked) seatClass = 'booked';
-                    else if (isSelected) seatClass = 'selected';
-
-                    return (
-                      <button
-                        key={seat.seat_no}
-                        type="button"
-                        disabled={isBooked}
-                        className={`bk-seat-btn ${seatClass}`}
-                        onClick={() => setSelectedSeat(isSelected ? null : seat.seat_no)}
-                        title={
-                          isBooked
-                            ? `Kursi ${seat.seat_no} telah dipesan oleh: ${seat.customer_name || 'Terkonfirmasi'}`
-                            : `Klik untuk memilih kursi ${seat.seat_no}`
-                        }
-                      >
-                        <div className="bk-seat-head"></div>
-                        <div className="bk-seat-base">{seat.seat_no}</div>
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Layout Teater Bioskop: 32 Kursi (4 Baris A, B, C, D) */}
+            <div className="bk-theater-layout">
+              {/* Header Blok Kiri & Kanan */}
+              <div className="bk-layout-header">
+                <span className="bk-block-title">BLOK KIRI (16 Kursi)</span>
+                <span className="bk-aisle-header">LORONG TENGAH</span>
+                <span className="bk-block-title">BLOK KANAN (16 Kursi)</span>
               </div>
 
-              {/* Baris B */}
-              <div className="bk-row">
-                <span className="bk-row-label">B</span>
-                <div className="bk-row-seats">
-                  {rowB.map((seat) => {
-                    const isBooked = seat.status === 'BOOKED';
-                    const isSelected = selectedSeat === seat.seat_no;
+              <div className="bk-seat-map-32">
+                {ROWS.map((rowLabel) => {
+                  // Ambil kursi baris ini
+                  const rowSeats = seats.filter((s) => s.seat_no.startsWith(rowLabel));
+                  // Sisi Kiri: nomor 1 s/d 4 (4 kursi)
+                  const leftSeats = [1, 2, 3, 4].map((num) => {
+                    const seatId = `${rowLabel}${num}`;
+                    return rowSeats.find((s) => s.seat_no === seatId) || { seat_no: seatId, status: 'AVAILABLE' };
+                  });
+                  // Sisi Kanan: nomor 5 s/d 8 (4 kursi)
+                  const rightSeats = [5, 6, 7, 8].map((num) => {
+                    const seatId = `${rowLabel}${num}`;
+                    return rowSeats.find((s) => s.seat_no === seatId) || { seat_no: seatId, status: 'AVAILABLE' };
+                  });
 
-                    let seatClass = 'available';
-                    if (isBooked) seatClass = 'booked';
-                    else if (isSelected) seatClass = 'selected';
+                  return (
+                    <div key={rowLabel} className="bk-row-split">
+                      {/* Label Baris Kiri */}
+                      <span className="bk-row-label">{rowLabel}</span>
 
-                    return (
-                      <button
-                        key={seat.seat_no}
-                        type="button"
-                        disabled={isBooked}
-                        className={`bk-seat-btn ${seatClass}`}
-                        onClick={() => setSelectedSeat(isSelected ? null : seat.seat_no)}
-                        title={
-                          isBooked
-                            ? `Kursi ${seat.seat_no} telah dipesan oleh: ${seat.customer_name || 'Terkonfirmasi'}`
-                            : `Klik untuk memilih kursi ${seat.seat_no}`
-                        }
-                      >
-                        <div className="bk-seat-head"></div>
-                        <div className="bk-seat-base">{seat.seat_no}</div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      {/* Blok Kiri (4 Kursi) */}
+                      <div className="bk-seat-cluster left">
+                        {leftSeats.map((seat) => {
+                          const isBooked = seat.status === 'BOOKED';
+                          const isSelected = selectedSeats.includes(seat.seat_no);
+
+                          let seatClass = 'available';
+                          if (isBooked) seatClass = 'booked';
+                          else if (isSelected) seatClass = 'selected';
+
+                          return (
+                            <button
+                              key={seat.seat_no}
+                              type="button"
+                              disabled={isBooked}
+                              className={`bk-seat-btn ${seatClass}`}
+                              onClick={() => toggleSeatSelection(seat.seat_no)}
+                              title={
+                                isBooked
+                                  ? `Kursi ${seat.seat_no} terisi (${seat.customer_name || 'Terkonfirmasi'})`
+                                  : `Klik untuk memilih/membatalkan kursi ${seat.seat_no}`
+                              }
+                            >
+                              <div className="bk-seat-head"></div>
+                              <div className="bk-seat-base">{seat.seat_no}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Lorong Tengah Bioskop (Center Walkway / Aisle) */}
+                      <div className="bk-center-aisle">
+                        <span className="bk-aisle-line"></span>
+                      </div>
+
+                      {/* Blok Kanan (4 Kursi) */}
+                      <div className="bk-seat-cluster right">
+                        {rightSeats.map((seat) => {
+                          const isBooked = seat.status === 'BOOKED';
+                          const isSelected = selectedSeats.includes(seat.seat_no);
+
+                          let seatClass = 'available';
+                          if (isBooked) seatClass = 'booked';
+                          else if (isSelected) seatClass = 'selected';
+
+                          return (
+                            <button
+                              key={seat.seat_no}
+                              type="button"
+                              disabled={isBooked}
+                              className={`bk-seat-btn ${seatClass}`}
+                              onClick={() => toggleSeatSelection(seat.seat_no)}
+                              title={
+                                isBooked
+                                  ? `Kursi ${seat.seat_no} terisi (${seat.customer_name || 'Terkonfirmasi'})`
+                                  : `Klik untuk memilih/membatalkan kursi ${seat.seat_no}`
+                              }
+                            >
+                              <div className="bk-seat-head"></div>
+                              <div className="bk-seat-base">{seat.seat_no}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Label Baris Kanan */}
+                      <span className="bk-row-label">{rowLabel}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -434,11 +483,11 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
             <div className="bk-legend">
               <div className="bk-legend-item">
                 <div className="bk-legend-chip available"></div>
-                <span>Tersedia</span>
+                <span>Tersedia (Bisa Pilih Banyak)</span>
               </div>
               <div className="bk-legend-item">
                 <div className="bk-legend-chip selected"></div>
-                <span>Pilihan Anda (Amber)</span>
+                <span>Pilihan Anda ({selectedSeats.length} Kursi)</span>
               </div>
               <div className="bk-legend-item">
                 <div className="bk-legend-chip booked"></div>
@@ -468,22 +517,38 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
 
               <form onSubmit={handleBooking} className="bk-form">
                 <div className="bk-form-field">
-                  <label className="bk-label">Kursi yang Dipilih</label>
-                  <div className={`bk-seat-display ${selectedSeat ? 'active' : 'empty'}`}>
-                    {selectedSeat ? (
-                      <>
-                        <span className="bk-seat-tag">Nomor Kursi</span>
-                        <span className="bk-seat-number">{selectedSeat}</span>
-                      </>
+                  <div className="bk-label-row">
+                    <label className="bk-label">Kursi yang Dipilih</label>
+                    {selectedSeats.length > 0 && (
+                      <span className="bk-multi-badge">{selectedSeats.length} Kursi Terpilih</span>
+                    )}
+                  </div>
+
+                  <div className={`bk-seat-display ${selectedSeats.length > 0 ? 'active' : 'empty'}`}>
+                    {selectedSeats.length > 0 ? (
+                      <div className="bk-chips-container">
+                        {selectedSeats.map((s) => (
+                          <span
+                            key={s}
+                            className="bk-seat-tag-interactive"
+                            onClick={() => toggleSeatSelection(s)}
+                            title="Klik untuk menghapus kursi ini"
+                          >
+                            {s} &times;
+                          </span>
+                        ))}
+                      </div>
                     ) : (
-                      <span className="bk-seat-placeholder">Klik salah satu kursi di denah</span>
+                      <span className="bk-seat-placeholder">
+                        Klik beberapa kursi sekaligus di denah (bisa &gt; 1 kursi)
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <div className="bk-form-field">
                   <label className="bk-label" htmlFor="customer-name-input">
-                    Nama Pemesan
+                    Nama Pemesan / Kontak
                   </label>
                   <div className="bk-input-wrapper">
                     <User size={16} className="bk-input-icon" />
@@ -491,21 +556,32 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
                       id="customer-name-input"
                       type="text"
                       required
-                      placeholder="Contoh: Budi Santoso"
+                      placeholder="Contoh: Budi Santoso & Rombongan"
                       className="bk-input"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      disabled={!selectedSeat || loading}
+                      disabled={selectedSeats.length === 0 || loading}
                     />
                   </div>
                 </div>
 
+                {selectedSeats.length > 1 && (
+                  <div className="bk-batch-summary">
+                    <span>Estimasi Tiket:</span>
+                    <strong>{selectedSeats.length} Tiket Bioskop</strong>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   className="bk-btn-submit"
-                  disabled={!selectedSeat || !customerName.trim() || loading}
+                  disabled={selectedSeats.length === 0 || !customerName.trim() || loading}
                 >
-                  {loading ? 'Memproses Transaksi...' : 'Konfirmasi & Pesan Tiket'}
+                  {loading
+                    ? 'Memproses Pemesanan...'
+                    : selectedSeats.length > 1
+                    ? `Pesan ${selectedSeats.length} Kursi Sekaligus`
+                    : 'Konfirmasi & Pesan Tiket'}
                 </button>
               </form>
             </div>
@@ -515,7 +591,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
               <div className="bk-panel-card">
                 <div className="bk-panel-header">
                   <Ticket size={18} color="#facc15" />
-                  <h2 className="bk-panel-title">Tiket Anda Sesi Ini</h2>
+                  <h2 className="bk-panel-title">Tiket Anda Sesi Ini ({userBookings.length})</h2>
                 </div>
 
                 <div className="bk-ticket-list">
@@ -589,9 +665,9 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
           {/* Summary Metric Cards */}
           <div className="admin-stats-grid">
             <div className="admin-stat-card">
-              <span className="admin-stat-label">Total Kursi Studio</span>
-              <span className="admin-stat-value">12</span>
-              <span className="admin-stat-sub">Baris A (6) & Baris B (6)</span>
+              <span className="admin-stat-label">Total Kapasitas Studio</span>
+              <span className="admin-stat-value">{totalSeatsCount}</span>
+              <span className="admin-stat-sub">16 Kursi Kiri & 16 Kursi Kanan (A-D)</span>
             </div>
             <div className="admin-stat-card">
               <span className="admin-stat-label">Kursi Terisi (CONFIRMED)</span>
@@ -600,7 +676,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
             </div>
             <div className="admin-stat-card">
               <span className="admin-stat-label">Kursi Tersedia (AVAILABLE)</span>
-              <span className="admin-stat-value green">{12 - confirmedCount}</span>
+              <span className="admin-stat-value green">{totalSeatsCount - confirmedCount}</span>
               <span className="admin-stat-sub">Siap Dipesan Pengunjung</span>
             </div>
             <div className="admin-stat-card">
@@ -616,7 +692,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
               <Search size={16} className="admin-search-icon" />
               <input
                 type="text"
-                placeholder="Cari nomor kursi, nama pemesan, atau status..."
+                placeholder="Cari nomor kursi (misal: C2), nama pemesan, atau status..."
                 className="admin-search-input"
                 value={adminSearch}
                 onChange={(e) => setAdminSearch(e.target.value)}

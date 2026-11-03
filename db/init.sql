@@ -5,4 +5,4 @@ CREATE INDEX IF NOT EXISTS bookings_show_seat_idx ON bookings(show_id,seat_no);
 CREATE TABLE IF NOT EXISTS seats (show_id TEXT NOT NULL REFERENCES shows(show_id), seat_no TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE','BOOKED')), booking_id UUID REFERENCES bookings(booking_id), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(show_id,seat_no), CHECK ((status='AVAILABLE' AND booking_id IS NULL) OR (status='BOOKED' AND booking_id IS NOT NULL)));
 CREATE TABLE IF NOT EXISTS operation_requests (request_id TEXT PRIMARY KEY, operation TEXT NOT NULL, payload_hash TEXT NOT NULL, response JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 INSERT INTO shows VALUES ('SHOW-001','Film Contoh',now() + interval '1 day','Studio 1') ON CONFLICT DO NOTHING;
-INSERT INTO seats(show_id,seat_no) SELECT 'SHOW-001', row_label || n FROM (VALUES ('A'),('B')) r(row_label) CROSS JOIN generate_series(1,6) n ON CONFLICT DO NOTHING;
+INSERT INTO seats(show_id,seat_no) SELECT 'SHOW-001', row_label || n FROM (VALUES ('A'),('B'),('C'),('D')) r(row_label) CROSS JOIN generate_series(1,8) n ON CONFLICT DO NOTHING;
