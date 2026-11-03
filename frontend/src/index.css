@@ -5,91 +5,681 @@
 }
 
 :root {
-  --bg-primary: #0a0c14;
+  /* DESIGN.md Tokens */
+  --color-netflix-red: #e50914;
+  --color-feature-card-gradient: #1d153f;
+  --gradient-feature-card-gradient: linear-gradient(149deg, #192247, #210e17);
+  --color-deep-space: #000000;
+  --color-graphite: #2d2d2d;
+  --color-charcoal: #414141;
+  --color-slate: #5a5a5a;
+  --color-ash: #808080;
+  --color-silver: #b3b3b3;
+  --color-chalk-white: #ffffff;
+
+  /* Cinema Seats & Existing Theme */
+  --bg-primary: #000000;
   --bg-card: #131722;
   --bg-card-hover: #1b2131;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  --text-main: #ffffff;
+  --text-muted: #b3b3b3;
   --accent-red: #e50914;
-  --accent-blue: #3b82f6;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
   --seat-available: #1e293b;
   --seat-available-border: #334155;
-  --seat-available-hover: #22c55e;
   --seat-booked: #ef4444;
   --seat-selected: #eab308;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-main);
+  background-color: var(--color-deep-space);
+  color: var(--color-chalk-white);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism & layout */
-.app-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
-
-header {
+/* ==========================================================================
+   NAVBAR (CinemaHub)
+   ========================================================================== */
+.ch-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 20px;
+  padding: 16px 36px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 30px;
 }
 
-.logo-area {
+.ch-nav-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 32px;
 }
 
-.logo-badge {
-  background: linear-gradient(135deg, #e50914, #990000);
-  color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 14px rgba(229, 9, 20, 0.4);
+.ch-brand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
-.title-tagline {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.ch-logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--color-netflix-red);
+  text-transform: uppercase;
 }
 
-.status-badge {
+.ch-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ch-nav-link {
+  background: none;
+  border: none;
+  color: var(--color-silver);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px 0;
+}
+
+.ch-nav-link:hover,
+.ch-nav-link.active {
+  color: var(--color-chalk-white);
+  font-weight: 700;
+}
+
+.ch-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ch-status-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.78rem;
 }
 
-.status-dot {
+.ch-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
-.dot-connected {
-  background-color: #22c55e;
+
+.ch-status-dot.connected {
+  background: #22c55e;
   box-shadow: 0 0 8px #22c55e;
 }
-.dot-disconnected {
-  background-color: #ef4444;
+
+.ch-status-dot.disconnected {
+  background: #ef4444;
+}
+
+.ch-cta-btn {
+  background: var(--color-netflix-red);
+  color: var(--color-chalk-white);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.ch-cta-btn:hover {
+  opacity: 0.88;
+}
+
+.ch-translucent-btn {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-slate);
+  color: var(--color-chalk-white);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ch-translucent-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   LANDING PAGE — HERO SECTION (Netflix Aesthetic)
+   ========================================================================== */
+.ch-landing-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.ch-hero-section {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  padding: 60px 48px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ch-hero-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.4) contrast(1.1);
+  z-index: 1;
+}
+
+.ch-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.75) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+}
+
+.ch-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+.ch-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ch-badge-live {
+  background: var(--color-netflix-red);
+  color: white;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 3px;
+}
+
+.ch-badge-dim {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-silver);
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 3px;
+}
+
+.ch-hero-title {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  color: var(--color-chalk-white);
+}
+
+.ch-hero-tagline {
+  color: #facc15;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.ch-hero-description {
+  color: var(--color-silver);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.ch-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+
+.ch-dot {
+  color: var(--color-slate);
+}
+
+.ch-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ch-btn-hero-primary {
+  background: var(--color-netflix-red);
+  color: var(--color-chalk-white);
+  border: none;
+  border-radius: 4px;
+  padding: 14px 28px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.ch-btn-hero-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.ch-hero-schedule-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ch-schedule-label {
+  font-size: 0.75rem;
+  color: var(--color-silver);
+}
+
+.ch-schedule-time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-chalk-white);
+}
+
+/* ==========================================================================
+   SECTIONS & CAROUSEL GRID
+   ========================================================================== */
+.ch-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 44px 32px 10px;
+  width: 100%;
+}
+
+.ch-section-header {
+  margin-bottom: 24px;
+}
+
+.ch-section-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-chalk-white);
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.ch-section-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-silver);
+}
+
+.ch-movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.ch-movie-card {
+  background: #11141e;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s;
+}
+
+.ch-movie-card.interactive-card {
+  cursor: pointer;
+}
+
+.ch-movie-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(229, 9, 20, 0.5);
+}
+
+.ch-poster-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.ch-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.ch-movie-card:hover .ch-poster-img {
+  transform: scale(1.04);
+}
+
+.ch-poster-rank {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.85);
+  -webkit-text-stroke: 2px #ffffff;
+  pointer-events: none;
+}
+
+.ch-badge-available {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ch-badge-full {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-silver);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.ch-badge-date {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--color-slate);
+  color: #facc15;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ch-movie-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ch-movie-meta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ch-movie-studio {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ch-movie-age {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border: 1px solid var(--color-slate);
+  border-radius: 3px;
+  color: var(--color-silver);
+}
+
+.ch-movie-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-chalk-white);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.ch-movie-genre {
+  font-size: 0.8rem;
+  color: var(--color-silver);
+  margin-bottom: 12px;
+}
+
+.ch-movie-meta-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.ch-movie-rating {
+  color: #facc15;
+}
+
+.ch-btn-card-action {
+  margin-top: auto;
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.ch-btn-card-action.active {
+  background: var(--color-netflix-red);
+  color: white;
+}
+
+.ch-btn-card-action.active:hover {
+  opacity: 0.9;
+}
+
+.ch-btn-card-action.disabled {
+  background: #262626;
+  color: var(--color-ash);
+  cursor: not-allowed;
+}
+
+.ch-btn-card-reminder {
+  margin-top: auto;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: transparent;
+  border: 1px solid var(--color-slate);
+  color: var(--color-silver);
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   FEATURE CARDS (DESIGN.md — Cosmic Gradient)
+   ========================================================================== */
+.ch-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.ch-feature-card {
+  background: var(--gradient-feature-card-gradient);
+  border-radius: 16px; /* Sesuai DESIGN.md */
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.ch-feature-icon {
+  font-size: 2rem;
+  margin-bottom: 14px;
+}
+
+.ch-feature-heading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-chalk-white);
+  margin-bottom: 8px;
+}
+
+.ch-feature-body {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-silver);
+}
+
+/* ==========================================================================
+   FOOTER (DESIGN.md)
+   ========================================================================== */
+.ch-footer {
+  background: #000000;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 48px 32px 32px;
+  margin-top: 60px;
+}
+
+.ch-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.ch-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ch-footer-tagline {
+  font-size: 0.85rem;
+  color: var(--color-ash);
+  max-width: 480px;
+}
+
+.ch-footer-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+.ch-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--color-silver);
+}
+
+.ch-footer-head {
+  color: var(--color-chalk-white);
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.ch-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 24px;
+  font-size: 0.78rem;
+  color: var(--color-ash);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ==========================================================================
+   BOOKING VIEW WRAPPER & EXISTING SEAT STYLING (DIJAGA UTUH)
+   ========================================================================== */
+.booking-page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.booking-navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-back-home {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-chalk-white);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-back-home:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.booking-movie-meta {
+  display: flex;
+  gap: 10px;
+}
+
+.movie-pill {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-silver);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.movie-pill.active {
+  background: rgba(229, 9, 20, 0.2);
+  color: #ff858d;
+  border-color: rgba(229, 9, 20, 0.4);
 }
 
 /* Main Grid */
@@ -287,9 +877,9 @@ header {
 .form-input {
   width: 100%;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #0f131d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-slate);
   color: white;
   font-size: 0.9rem;
   outline: none;
@@ -303,19 +893,18 @@ header {
 .btn-primary {
   width: 100%;
   padding: 12px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #e50914, #b20710);
+  border-radius: 4px;
+  background: var(--color-netflix-red);
   border: none;
   color: white;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.35);
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.92;
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 
@@ -329,7 +918,7 @@ header {
   border: 1px solid rgba(239, 68, 68, 0.4);
   color: #f87171;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -352,7 +941,7 @@ header {
 .activity-item {
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  border-radius: 4px;
   border-left: 3px solid #3b82f6;
   font-size: 0.8rem;
   display: flex;
@@ -375,7 +964,7 @@ header {
 
 .alert-box {
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-bottom: 14px;
   font-size: 0.85rem;
 }
