@@ -95,6 +95,16 @@ def list_seats(show_id: str = "SHOW-001"):
     except grpc.RpcError as e:
         handle_grpc_error(e)
 
+@app.get("/api/shows/{show_id}/bookings")
+def list_bookings(show_id: str = "SHOW-001"):
+    service = get_service()
+    try:
+        bookings = service.repo.list_bookings(show_id)
+        return {"show_id": show_id, "bookings": bookings}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/bookings")
 def book_seat(payload: BookRequestModel):
     stub = get_grpc_stub()

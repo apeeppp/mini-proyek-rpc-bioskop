@@ -1,11 +1,27 @@
 import React from 'react';
-import { Star, Zap, ShieldCheck, Radio, Clock, Calendar, ArrowRight } from 'lucide-react';
-import { FEATURED_MOVIE, NOW_SHOWING_MOVIES, COMING_SOON_MOVIES } from '../data/movies';
+import {
+  Star,
+  Zap,
+  ShieldCheck,
+  Radio,
+  Clock,
+  Calendar,
+  ArrowRight,
+  Cpu,
+  Layers,
+  Database,
+  RefreshCw,
+  Lock,
+  GitBranch,
+  Terminal,
+  Activity
+} from 'lucide-react';
+import { FEATURED_MOVIE } from '../data/movies';
 
 export default function LandingPage({ onSelectMovie }) {
   return (
     <div className="ch-landing-page">
-      {/* Hero Section */}
+      {/* 1. HERO SECTION: Single Active Movie */}
       <section className="ch-hero-section">
         <div
           className="ch-hero-backdrop"
@@ -16,7 +32,7 @@ export default function LandingPage({ onSelectMovie }) {
 
         <div className="ch-hero-content">
           <div className="ch-hero-badges">
-            <span className="ch-badge-live">LIVE SCREENING</span>
+            <span className="ch-badge-live">SIMULASI AKTIF</span>
             <span className="ch-badge-dim">{FEATURED_MOVIE.auditorium}</span>
             <span className="ch-badge-dim">{FEATURED_MOVIE.ageRating}</span>
           </div>
@@ -44,157 +60,180 @@ export default function LandingPage({ onSelectMovie }) {
               className="ch-btn-hero-primary"
               onClick={() => onSelectMovie(FEATURED_MOVIE.id)}
             >
-              <span>Pesan Kursi Sekarang</span>
+              <span>Uji Simulasi & Pesan Tiket</span>
               <ArrowRight size={18} />
             </button>
             <div className="ch-hero-schedule-info">
-              <span className="ch-schedule-label">Jadwal Terdekat:</span>
+              <span className="ch-schedule-label">Jadwal Sesi Tersedia:</span>
               <span className="ch-schedule-time">{FEATURED_MOVIE.showTime}</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Katalog Film: Sedang Tayang di Indonesia */}
+      {/* 2. PENJELASAN SIMULASI PROYEK & ARSITEKTUR SISTEM TERDISTRIBUSI */}
       <section className="ch-section">
         <div className="ch-section-header">
           <div>
-            <h2 className="ch-section-title">Sedang Tayang di Bioskop Indonesia</h2>
+            <h2 className="ch-section-title">Tentang Simulasi Proyek Ini</h2>
             <p className="ch-section-subtitle">
-              Pilih film favorit Anda dan nikmati pemesanan kursi instan dengan concurrency control.
+              Sistem reservasi tiket bioskop terdistribusi dirancang untuk menguji keandalan concurrency control, idempotensi, dan sinkronisasi realtime pada beban pemesanan bersamaan.
             </p>
           </div>
         </div>
 
-        <div className="ch-movies-grid">
-          {NOW_SHOWING_MOVIES.map((movie, index) => (
-            <div
-              key={movie.id}
-              className={`ch-movie-card ${movie.activeShow ? 'interactive-card' : ''}`}
-              onClick={() => movie.activeShow && onSelectMovie(movie.id)}
-            >
-              <div className="ch-poster-wrapper">
-                <img src={movie.posterUrl} alt={movie.title} className="ch-poster-img" />
-                <div className="ch-poster-rank">{index + 1}</div>
-                {movie.activeShow ? (
-                  <span className="ch-badge-available">Pemesanan Dibuka</span>
-                ) : (
-                  <span className="ch-badge-full">Studio Penuh</span>
-                )}
-              </div>
+        {/* Alur Kerja Sistem (Pipeline / Workflow Visual) */}
+        <div className="sim-workflow-card">
+          <h3 className="sim-workflow-title">
+            <Activity size={18} color="#e50914" />
+            <span>Alur Transaksi & Sinkronisasi Kursi (End-to-End)</span>
+          </h3>
 
-              <div className="ch-movie-info">
-                <div className="ch-movie-meta-top">
-                  <span className="ch-movie-studio">{movie.studio}</span>
-                  <span className="ch-movie-age">{movie.ageRating}</span>
-                </div>
-                <h3 className="ch-movie-title">{movie.title}</h3>
-                <p className="ch-movie-genre">{movie.genre}</p>
-                <div className="ch-movie-meta-bottom">
-                  <span className="ch-movie-rating">
-                    <Star size={13} fill="#facc15" color="#facc15" />
-                    <span>{movie.rating}</span>
-                  </span>
-                  <span className="ch-movie-duration">
-                    <Clock size={12} color="#9ca3af" />
-                    <span>{movie.duration}</span>
-                  </span>
-                </div>
-
-                {movie.activeShow ? (
-                  <button
-                    className="ch-btn-card-action active"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectMovie(movie.id);
-                    }}
-                  >
-                    Beli Tiket (SHOW-001)
-                  </button>
-                ) : (
-                  <button className="ch-btn-card-action disabled" disabled>
-                    Segera Tambah Sesi
-                  </button>
-                )}
-              </div>
+          <div className="sim-steps-grid">
+            <div className="sim-step-item">
+              <div className="sim-step-num">1</div>
+              <div className="sim-step-badge">Client Tier</div>
+              <h4 className="sim-step-heading">Permintaan Kursi</h4>
+              <p className="sim-step-desc">
+                Pengguna memilih kursi dan mengirim nama pemesan beserta token <code>request_id</code> unik (UUID v4) via Web UI atau terminal CLI.
+              </p>
             </div>
-          ))}
+
+            <div className="sim-step-item">
+              <div className="sim-step-num">2</div>
+              <div className="sim-step-badge">Gateway Tier</div>
+              <h4 className="sim-step-heading">FastAPI BFF Gateway</h4>
+              <p className="sim-step-desc">
+                Menjembatani browser ke backend melalui REST HTTP dan WebSocket, memvalidasi payload sebelum memanggil prosedur gRPC.
+              </p>
+            </div>
+
+            <div className="sim-step-item">
+              <div className="sim-step-num">3</div>
+              <div className="sim-step-badge">RPC Tier</div>
+              <h4 className="sim-step-heading">gRPC CinemaService</h4>
+              <p className="sim-step-desc">
+                Server menerima <code>PesanKursi()</code> berbasis Protocol Buffers dengan serialisasi biner super cepat dan thread pool concurrent.
+              </p>
+            </div>
+
+            <div className="sim-step-item">
+              <div className="sim-step-num">4</div>
+              <div className="sim-step-badge">Database Tier</div>
+              <h4 className="sim-step-heading">PostgreSQL Concurrency</h4>
+              <p className="sim-step-desc">
+                Mengunci baris kursi dengan <code>SELECT FOR UPDATE</code> dan Advisory Lock, memastikan nol kursi ganda (zero double-booking).
+              </p>
+            </div>
+
+            <div className="sim-step-item">
+              <div className="sim-step-num">5</div>
+              <div className="sim-step-badge">Realtime Broadcast</div>
+              <h4 className="sim-step-heading">WebSocket Broadcast</h4>
+              <p className="sim-step-desc">
+                Setelah transaksi di-commit, event disiarkan seketika ke seluruh layar pengguna untuk mengubah warna kursi secara otomatis.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Feature Cards Showcase (Sesuai DESIGN.md - Cosmic Gradient & Professional Icons) */}
+      {/* 3. FITUR TEKNOLOGI YANG DIUJI DALAM SIMULASI */}
       <section className="ch-section">
         <div className="ch-section-header">
           <div>
-            <h2 className="ch-section-title">Keunggulan Teknologi Bioskop CinemaHub</h2>
+            <h2 className="ch-section-title">Fitur Teknis yang Ada di Web Ini</h2>
             <p className="ch-section-subtitle">
-              Sistem backend performa tinggi dirancang untuk keandalan di beban puncak pemesanan tiket.
+              Setiap komponen pada website ini merepresentasikan mekanisme nyata sistem terdistribusi.
             </p>
           </div>
         </div>
 
         <div className="ch-features-grid">
+          {/* Card 1 */}
           <div className="ch-feature-card">
             <div className="ch-feature-icon-wrapper red">
               <Zap size={22} color="#e50914" />
             </div>
-            <h3 className="ch-feature-heading">gRPC Ultra-Low Latency</h3>
+            <h3 className="ch-feature-heading">gRPC & Protocol Buffers</h3>
             <p className="ch-feature-body">
-              Komunikasi client-server berbasis Protocol Buffers dengan serialisasi biner berkecepatan tinggi, meminimalkan latensi jaringan hingga di bawah 10ms.
+              Menggantikan REST tradisional dengan RPC biner berperforma tinggi. Menjamin definisi antarmuka kontrak data yang ketat via file <code>cinema.proto</code>.
             </p>
           </div>
 
+          {/* Card 2 */}
           <div className="ch-feature-card">
             <div className="ch-feature-icon-wrapper blue">
               <ShieldCheck size={22} color="#3b82f6" />
             </div>
-            <h3 className="ch-feature-heading">Anti Double-Booking</h3>
+            <h3 className="ch-feature-heading">Pencegahan Double-Booking</h3>
             <p className="ch-feature-body">
-              Diproteksi dengan PostgreSQL Advisory Locks dan Partial Unique Index, mencegah konflik race condition saat puluhan pengguna memesan kursi yang sama secara bersamaan.
+              Menggunakan <em>Pessimistic Row-Level Locking</em> dan <em>Partial Unique Index</em> pada PostgreSQL. Jika dua orang memesan kursi yang sama di milidetik yang sama, salah satu berhasil dan lainnya menerima error <code>ALREADY_EXISTS</code>.
             </p>
           </div>
 
+          {/* Card 3 */}
           <div className="ch-feature-card">
             <div className="ch-feature-icon-wrapper green">
               <Radio size={22} color="#10b981" />
             </div>
-            <h3 className="ch-feature-heading">Realtime WebSocket Streaming</h3>
+            <h3 className="ch-feature-heading">Live Stream Status Kursi</h3>
             <p className="ch-feature-body">
-              Pembaruan status kursi yang dipesan atau dibatalkan disiarkan secara instan ke layar pengunjung tanpa perlu memuat ulang halaman.
+              Menggunakan Server Streaming gRPC yang diteruskan ke WebSocket browser. Pengunjung langsung melihat kursi terisi tanpa perlu menekan tombol refresh.
+            </p>
+          </div>
+
+          {/* Card 4 */}
+          <div className="ch-feature-card">
+            <div className="ch-feature-icon-wrapper amber">
+              <RefreshCw size={22} color="#f59e0b" />
+            </div>
+            <h3 className="ch-feature-heading">Idempotensi Transaksi</h3>
+            <p className="ch-feature-body">
+              Setiap pemesanan memiliki <code>request_id</code> unik dan verifikasi hash payload. Jika koneksi terputus dan client melakukan auto-retry, transaksi tidak akan menduplikasi pemesanan tiket.
+            </p>
+          </div>
+
+          {/* Card 5 */}
+          <div className="ch-feature-card">
+            <div className="ch-feature-icon-wrapper purple">
+              <Layers size={22} color="#a855f7" />
+            </div>
+            <h3 className="ch-feature-heading">Panel Admin & Transparansi</h3>
+            <p className="ch-feature-body">
+              Tersedia dashboard audit untuk melihat daftar pemilik kursi yang terkonfirmasi, histori pembatalan transaksi, serta hak akses untuk menghapus/mereset kursi demo.
+            </p>
+          </div>
+
+          {/* Card 6 */}
+          <div className="ch-feature-card">
+            <div className="ch-feature-icon-wrapper cyan">
+              <Terminal size={22} color="#06b6d4" />
+            </div>
+            <h3 className="ch-feature-heading">Dukungan CLI & Race Test</h3>
+            <p className="ch-feature-body">
+              Selain melalui web, sistem dapat diuji langsung via terminal menggunakan container client (misal: <code>docker compose run client race-test</code>) yang langsung tersinkronisasi ke web.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Katalog Film: Segera Hadir di Indonesia */}
+      {/* 4. CALL TO ACTION SECTION */}
       <section className="ch-section" style={{ paddingBottom: '60px' }}>
-        <div className="ch-section-header">
-          <div>
-            <h2 className="ch-section-title">Segera Hadir di Bioskop Indonesia</h2>
-            <p className="ch-section-subtitle">Nantikan deretan film blockbuster musim ini di studio CinemaHub.</p>
+        <div className="sim-cta-box">
+          <div className="sim-cta-content">
+            <h3 className="sim-cta-title">Siap Mencoba Simulasi Pemesanan?</h3>
+            <p className="sim-cta-desc">
+              Pilih kursi di Studio 1 Ultra IMAX, lakukan pemesanan, atau buka tab Admin untuk melihat transparansi data transaksi di database PostgreSQL.
+            </p>
           </div>
-        </div>
-
-        <div className="ch-movies-grid">
-          {COMING_SOON_MOVIES.map((movie) => (
-            <div key={movie.id} className="ch-movie-card coming-soon-card">
-              <div className="ch-poster-wrapper">
-                <img src={movie.posterUrl} alt={movie.title} className="ch-poster-img" />
-                <span className="ch-badge-date">
-                  <Calendar size={12} color="#facc15" />
-                  <span>{movie.releaseDate}</span>
-                </span>
-              </div>
-              <div className="ch-movie-info">
-                <span className="ch-movie-age">{movie.ageRating}</span>
-                <h3 className="ch-movie-title">{movie.title}</h3>
-                <p className="ch-movie-genre">{movie.genre}</p>
-                <button className="ch-btn-card-reminder" disabled>
-                  Ingatkan Saya
-                </button>
-              </div>
-            </div>
-          ))}
+          <button
+            className="ch-btn-hero-primary"
+            onClick={() => onSelectMovie(FEATURED_MOVIE.id)}
+          >
+            <span>Buka Layar Pemesanan Kursi</span>
+            <ArrowRight size={18} />
+          </button>
         </div>
       </section>
     </div>

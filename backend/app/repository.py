@@ -50,3 +50,24 @@ class Repository:
             result=row_response(dict(row, status='CANCELLED',request_id=request_id),message='Pemesanan dibatalkan')
             c.execute('INSERT INTO operation_requests(request_id,operation,payload_hash,response) VALUES(%s,%s,%s,%s)',(request_id,'cancel',ph,Jsonb(result)))
             return result
+    def list_bookings(self, show_id):
+        with connection() as c:
+            rows = c.execute(
+                "SELECT booking_id::text, request_id, show_id, seat_no, customer_name, status, created_at, updated_at "
+                "FROM bookings WHERE show_id=%s ORDER BY created_at DESC",
+                (show_id,)
+            ).fetchall()
+            return [
+                {
+                    "booking_id": r["booking_id"],
+                    "request_id": r["request_id"],
+                    "show_id": r["show_id"],
+                    "seat_no": r["seat_no"],
+                    "customer_name": r["customer_name"],
+                    "status": r["status"],
+                    "created_at": r["created_at"].isoformat() if r.get("created_at") else "",
+                    "updated_at": r["updated_at"].isoformat() if r.get("updated_at") else ""
+                }
+                for r in rows
+            ]
+
