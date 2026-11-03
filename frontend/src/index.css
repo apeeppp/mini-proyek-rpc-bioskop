@@ -260,11 +260,17 @@ body {
 .ch-hero-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 0.85rem;
   color: #e5e7eb;
   font-weight: 600;
   margin-bottom: 28px;
+}
+
+.ch-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .ch-dot {
@@ -287,6 +293,9 @@ body {
   font-size: 1.05rem;
   font-weight: 800;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   transition: opacity 0.2s, transform 0.2s;
 }
 
@@ -423,13 +432,16 @@ body {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   border: 1px solid var(--color-slate);
   color: #facc15;
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.72rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .ch-movie-info {
@@ -488,6 +500,15 @@ body {
 
 .ch-movie-rating {
   color: #facc15;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ch-movie-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .ch-btn-card-action {
@@ -547,9 +568,29 @@ body {
   flex-direction: column;
 }
 
-.ch-feature-icon {
-  font-size: 2rem;
-  margin-bottom: 14px;
+.ch-feature-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.ch-feature-icon-wrapper.red {
+  background: rgba(229, 9, 20, 0.15);
+  border: 1px solid rgba(229, 9, 20, 0.35);
+}
+
+.ch-feature-icon-wrapper.blue {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.ch-feature-icon-wrapper.green {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .ch-feature-heading {
@@ -655,6 +696,9 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: background 0.2s;
 }
 
@@ -664,16 +708,19 @@ body {
 
 .booking-movie-meta {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
 .movie-pill {
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 4px;
   font-size: 0.78rem;
   background: rgba(255, 255, 255, 0.05);
   color: var(--color-silver);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
 }
 
 .movie-pill.active {

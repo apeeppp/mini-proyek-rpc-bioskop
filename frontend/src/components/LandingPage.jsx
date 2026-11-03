@@ -1,4 +1,5 @@
 import React from 'react';
+import { Star, Zap, ShieldCheck, Radio, Clock, Calendar, ArrowRight } from 'lucide-react';
 import { FEATURED_MOVIE, NOW_SHOWING_MOVIES, COMING_SOON_MOVIES } from '../data/movies';
 
 export default function LandingPage({ onSelectMovie }) {
@@ -25,11 +26,17 @@ export default function LandingPage({ onSelectMovie }) {
           <p className="ch-hero-description">{FEATURED_MOVIE.description}</p>
 
           <div className="ch-hero-meta">
-            <span>⭐ {FEATURED_MOVIE.rating}/10</span>
+            <span className="ch-meta-item">
+              <Star size={15} fill="#facc15" color="#facc15" />
+              <span>{FEATURED_MOVIE.rating}/10</span>
+            </span>
             <span className="ch-dot">•</span>
             <span>{FEATURED_MOVIE.genre}</span>
             <span className="ch-dot">•</span>
-            <span>{FEATURED_MOVIE.duration}</span>
+            <span className="ch-meta-item">
+              <Clock size={14} color="#b3b3b3" />
+              <span>{FEATURED_MOVIE.duration}</span>
+            </span>
           </div>
 
           <div className="ch-hero-actions">
@@ -37,7 +44,8 @@ export default function LandingPage({ onSelectMovie }) {
               className="ch-btn-hero-primary"
               onClick={() => onSelectMovie(FEATURED_MOVIE.id)}
             >
-              Pesan Kursi Sekarang &rarr;
+              <span>Pesan Kursi Sekarang</span>
+              <ArrowRight size={18} />
             </button>
             <div className="ch-hero-schedule-info">
               <span className="ch-schedule-label">Jadwal Terdekat:</span>
@@ -47,11 +55,11 @@ export default function LandingPage({ onSelectMovie }) {
         </div>
       </section>
 
-      {/* Katalog Film: Sedang Tayang */}
+      {/* Katalog Film: Sedang Tayang di Indonesia */}
       <section className="ch-section">
         <div className="ch-section-header">
           <div>
-            <h2 className="ch-section-title">Sedang Tayang di Bioskop</h2>
+            <h2 className="ch-section-title">Sedang Tayang di Bioskop Indonesia</h2>
             <p className="ch-section-subtitle">
               Pilih film favorit Anda dan nikmati pemesanan kursi instan dengan concurrency control.
             </p>
@@ -83,8 +91,14 @@ export default function LandingPage({ onSelectMovie }) {
                 <h3 className="ch-movie-title">{movie.title}</h3>
                 <p className="ch-movie-genre">{movie.genre}</p>
                 <div className="ch-movie-meta-bottom">
-                  <span className="ch-movie-rating">★ {movie.rating}</span>
-                  <span className="ch-movie-duration">{movie.duration}</span>
+                  <span className="ch-movie-rating">
+                    <Star size={13} fill="#facc15" color="#facc15" />
+                    <span>{movie.rating}</span>
+                  </span>
+                  <span className="ch-movie-duration">
+                    <Clock size={12} color="#9ca3af" />
+                    <span>{movie.duration}</span>
+                  </span>
                 </div>
 
                 {movie.activeShow ? (
@@ -108,7 +122,7 @@ export default function LandingPage({ onSelectMovie }) {
         </div>
       </section>
 
-      {/* Feature Cards Showcase (Sesuai DESIGN.md - Cosmic Gradient) */}
+      {/* Feature Cards Showcase (Sesuai DESIGN.md - Cosmic Gradient & Professional Icons) */}
       <section className="ch-section">
         <div className="ch-section-header">
           <div>
@@ -121,7 +135,9 @@ export default function LandingPage({ onSelectMovie }) {
 
         <div className="ch-features-grid">
           <div className="ch-feature-card">
-            <div className="ch-feature-icon">⚡</div>
+            <div className="ch-feature-icon-wrapper red">
+              <Zap size={22} color="#e50914" />
+            </div>
             <h3 className="ch-feature-heading">gRPC Ultra-Low Latency</h3>
             <p className="ch-feature-body">
               Komunikasi client-server berbasis Protocol Buffers dengan serialisasi biner berkecepatan tinggi, meminimalkan latensi jaringan hingga di bawah 10ms.
@@ -129,7 +145,9 @@ export default function LandingPage({ onSelectMovie }) {
           </div>
 
           <div className="ch-feature-card">
-            <div className="ch-feature-icon">🛡️</div>
+            <div className="ch-feature-icon-wrapper blue">
+              <ShieldCheck size={22} color="#3b82f6" />
+            </div>
             <h3 className="ch-feature-heading">Anti Double-Booking</h3>
             <p className="ch-feature-body">
               Diproteksi dengan PostgreSQL Advisory Locks dan Partial Unique Index, mencegah konflik race condition saat puluhan pengguna memesan kursi yang sama secara bersamaan.
@@ -137,7 +155,9 @@ export default function LandingPage({ onSelectMovie }) {
           </div>
 
           <div className="ch-feature-card">
-            <div className="ch-feature-icon">📡</div>
+            <div className="ch-feature-icon-wrapper green">
+              <Radio size={22} color="#10b981" />
+            </div>
             <h3 className="ch-feature-heading">Realtime WebSocket Streaming</h3>
             <p className="ch-feature-body">
               Pembaruan status kursi yang dipesan atau dibatalkan disiarkan secara instan ke layar pengunjung tanpa perlu memuat ulang halaman.
@@ -146,12 +166,12 @@ export default function LandingPage({ onSelectMovie }) {
         </div>
       </section>
 
-      {/* Katalog Film: Segera Hadir */}
+      {/* Katalog Film: Segera Hadir di Indonesia */}
       <section className="ch-section" style={{ paddingBottom: '60px' }}>
         <div className="ch-section-header">
           <div>
-            <h2 className="ch-section-title">Segera Hadir di CinemaHub</h2>
-            <p className="ch-section-subtitle">Nantikan deretan film blockbuster musim ini di studio kami.</p>
+            <h2 className="ch-section-title">Segera Hadir di Bioskop Indonesia</h2>
+            <p className="ch-section-subtitle">Nantikan deretan film blockbuster musim ini di studio CinemaHub.</p>
           </div>
         </div>
 
@@ -160,7 +180,10 @@ export default function LandingPage({ onSelectMovie }) {
             <div key={movie.id} className="ch-movie-card coming-soon-card">
               <div className="ch-poster-wrapper">
                 <img src={movie.posterUrl} alt={movie.title} className="ch-poster-img" />
-                <span className="ch-badge-date">{movie.releaseDate}</span>
+                <span className="ch-badge-date">
+                  <Calendar size={12} color="#facc15" />
+                  <span>{movie.releaseDate}</span>
+                </span>
               </div>
               <div className="ch-movie-info">
                 <span className="ch-movie-age">{movie.ageRating}</span>

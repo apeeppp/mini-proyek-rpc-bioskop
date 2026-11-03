@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Film } from 'lucide-react';
 
 const SHOW_ID = 'SHOW-001';
 
@@ -204,11 +205,15 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
       {/* Tombol Kembali & Info Film */}
       <div className="booking-navigation-bar">
         <button className="btn-back-home" onClick={onBackToHome}>
-          &larr; Kembali ke Katalog Film
+          <ArrowLeft size={16} />
+          <span>Kembali ke Katalog Film</span>
         </button>
         <div className="booking-movie-meta">
-          <span className="movie-pill">Studio 1 Ultra IMAX</span>
-          <span className="movie-pill active">Jadwal: SHOW-001 (19:30 WIB)</span>
+          <span className="movie-pill">
+            <Film size={13} style={{ marginRight: '6px' }} />
+            Studio 1 Ultra IMAX
+          </span>
+          <span className="movie-pill active">Siksa Kubur • SHOW-001 (19:30 WIB)</span>
         </div>
       </div>
 
