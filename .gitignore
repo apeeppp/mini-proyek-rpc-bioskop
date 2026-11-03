@@ -4,4 +4,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 app/generated/*_pb2.py
+backend/app/generated/*_pb2.py
 results/*.png
+backend/results/*.png
+node_modules/
+dist/
