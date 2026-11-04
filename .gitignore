@@ -9,3 +9,4 @@ results/*.png
 backend/results/*.png
 node_modules/
 dist/
+PROMPT_AGENT_CinemaRPC.md
