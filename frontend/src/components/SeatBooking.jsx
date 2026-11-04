@@ -48,6 +48,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
 
   const wsRef = useRef(null);
   const selectedSeatsRef = useRef(selectedSeats);
+  const pendingBookingSeatsRef = useRef(new Set());
 
   useEffect(() => {
     selectedSeatsRef.current = selectedSeats;
@@ -57,6 +58,26 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
   useEffect(() => {
     localStorage.setItem('cinema_user_bookings', JSON.stringify(userBookings));
   }, [userBookings]);
+
+  // Sinkronkan status tiket sesi ini dengan data terbaru dari database
+  useEffect(() => {
+    if (allBookings.length > 0 && userBookings.length > 0) {
+      setUserBookings((prev) => {
+        let changed = false;
+        const updated = prev.filter((myTicket) => {
+          // Cari status terkini di database
+          const found = allBookings.find((b) => b.booking_id === myTicket.booking_id);
+          // Jika sudah berstatus CANCELLED di database atau sudah tidak ada, hapus dari tiket aktif
+          if (found && found.status === 'CANCELLED') {
+            changed = true;
+            return false;
+          }
+          return true;
+        });
+        return changed ? updated : prev;
+      });
+    }
+  }, [allBookings]);
 
   // Ambil daftar status kursi terkini
   const fetchSeats = async () => {
@@ -133,13 +154,22 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
             // Perbarui juga data tabel admin secara otomatis
             fetchAllBookings();
 
-            // Jika kursi yang sedang dipilih dibooking orang lain, hilangkan dari selectedSeats
-            if (data.event === 'BOOKED' && selectedSeatsRef.current.includes(data.seat_no)) {
-              setSelectedSeats((prev) => prev.filter((s) => s !== data.seat_no));
-              setStatusMsg({
-                type: 'error',
-                text: `Kursi ${data.seat_no} baru saja dipesan oleh pengunjung lain dan dihapus dari pilihan Anda.`
-              });
+            // Jika kursi dibatalkan oleh admin/server, hapus dari daftar tiket lokal pengguna
+            if (data.event === 'CANCELLED') {
+              setUserBookings((prev) => prev.filter((b) => b.seat_no !== data.seat_no));
+            }
+
+            // Jika kursi yang sedang dipilih dibooking orang lain (bukan bagian dari submit user ini sendiri),
+            // hilangkan dari selectedSeats dan beri notifikasi peringatan.
+            if (data.event === 'BOOKED') {
+              const isOwnPendingSeat = pendingBookingSeatsRef.current.has(data.seat_no);
+              if (selectedSeatsRef.current.includes(data.seat_no) && !isOwnPendingSeat) {
+                setSelectedSeats((prev) => prev.filter((s) => s !== data.seat_no));
+                setStatusMsg({
+                  type: 'error',
+                  text: `Kursi ${data.seat_no} baru saja dipesan oleh pengunjung lain dan dihapus dari pilihan Anda.`
+                });
+              }
             }
 
             // Catat log aktivitas
@@ -198,6 +228,9 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
     e.preventDefault();
     if (selectedSeats.length === 0 || !customerName.trim()) return;
 
+    const seatsToBook = [...selectedSeats];
+    seatsToBook.forEach((s) => pendingBookingSeatsRef.current.add(s));
+
     setLoading(true);
     setStatusMsg(null);
 
@@ -207,7 +240,7 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           show_id: SHOW_ID,
-          seat_nos: selectedSeats,
+          seat_nos: seatsToBook,
           customer_name: customerName.trim()
         })
       });
@@ -232,13 +265,19 @@ export default function SeatBooking({ onBackToHome, isWsConnected }) {
         text: `Berhasil memesan ${createdTickets.length} tiket kursi: ${createdTickets.map((t) => t.seat_no).join(', ')}!`
       });
 
-      setUserBookings((prev) => [...createdTickets, ...prev]);
+      setUserBookings((prev) => {
+        // Gabungkan dan hindari duplikasi jika ada ID yang sama
+        const existingIds = new Set(prev.map((b) => b.booking_id));
+        const filteredNew = createdTickets.filter((b) => !existingIds.has(b.booking_id));
+        return [...filteredNew, ...prev];
+      });
       setSelectedSeats([]);
       setCustomerName('');
       fetchAllBookings();
     } catch (err) {
       setStatusMsg({ type: 'error', text: err.message });
     } finally {
+      seatsToBook.forEach((s) => pendingBookingSeatsRef.current.delete(s));
       setLoading(false);
     }
   };

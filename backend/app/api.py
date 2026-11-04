@@ -150,8 +150,8 @@ def book_seat(payload: BookRequestModel):
             
     # Kembalikan response single object (jika 1 kursi) atau batch object (jika banyak)
     if len(success_bookings) == 1:
-        single = success_bookings[0]
-        single["bookings"] = success_bookings
+        single = dict(success_bookings[0])
+        single["bookings"] = [dict(success_bookings[0])]
         return single
     
     return {
